@@ -20,7 +20,7 @@ namespace AdminWPF
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySQL("server=localhost;database=book_catalog;user=root;password=");
+            optionsBuilder.UseMySQL("server=localhost;port=3306;database=book_catalog;user=root;password=");
         }
     }
 }
