@@ -22,21 +22,30 @@ namespace AdminWPF
     /// </summary>
     public partial class MainWindow : Window
     {
+        struct PInfoWrapper
+        {
+            public string Name;
+            public PropertyInfo PropertyInfo;
+        }
         private BookCatalogContext _dbContext;
-        private List<PropertyInfo> _dbContextTableProperties;
+        private List<PInfoWrapper> _dbContextTableProperties;
         public MainWindow()
         {
             InitializeComponent();
 
             //never closed (not ideal)
             _dbContext = new BookCatalogContext();
-            _dbContextTableProperties = this._dbContext.GetType().GetProperties().Where(p => p.PropertyType.Name.Contains("DbSet")).ToList();
-
-            _dbContext.Books.Load();
-            RecordGrid.DataContext = this;
+            _dbContextTableProperties = this._dbContext
+                .GetType()
+                .GetProperties()
+                .Where(p => 
+                    p.PropertyType.IsGenericType 
+                        && 
+                    p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
+                .Select(p => new PInfoWrapper{ Name = p.Name, PropertyInfo = p})
+                .ToList();
 
             Binding b = new Binding();
-            b.Source = _dbContext.Books.Local.ToObservableCollection();
             b.Mode = BindingMode.TwoWay;
             b.Path = new PropertyPath("."); // took way to long
             b.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
@@ -49,12 +58,26 @@ namespace AdminWPF
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             lbTableSelect.ItemsSource = _dbContextTableProperties;    
+            lbTableSelect.DisplayMemberPath = "";
+
+            _dbContext.Books.Load();
+            _dbContext.Authors.Load();
+            RecordGrid.DataContext = _dbContext.Books.Local.ToObservableCollection();
         }
 
         private void lbTableSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            PropertyInfo item = (PropertyInfo)((ListBox)sender).SelectedItem;
-            Type itemType = item.PropertyType.GenericTypeArguments[0]; 
+            ListBox lb = (ListBox)sender;
+            if (lb.SelectedItem is not PInfoWrapper) return;
+
+            var selected = (PInfoWrapper)lb.SelectedItem;
+
+            dynamic dbSet = selected.PropertyInfo.GetValue(_dbContext);
+
+            var a = dbSet.GetType();
+            dbSet.Load(); //tf u mean does not contain definition for Load()
+
+            RecordGrid.DataContext = dbSet.Local.ToObservableCollection();
             
             //RecordGrid.ItemsSource = (()item.GetValue(this._dbContext)).ToList();
         }
@@ -73,8 +96,7 @@ namespace AdminWPF
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            _dbContext.Books.Remove(_dbContext.Books.First());
+            //_dbContext.Books.Remove(_dbContext.Books.First());
         }
-
     }
 }
