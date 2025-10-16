@@ -74,8 +74,13 @@ namespace AdminWPF
 
             dynamic dbSet = selected.PropertyInfo.GetValue(_dbContext);
 
+            var dbSetType = selected.PropertyInfo.PropertyType.GetGenericArguments()[0];
+
+            Type t = typeof(DbSet<>).MakeGenericType(dbSetType);
+
             var a = dbSet.GetType();
-            dbSet.Load(); //tf u mean does not contain definition for Load()
+            //System.Object.ReferenceEquals(this._dbContext.Authors, dbSet) ==> ture ????
+            //dbSet.Load(); //tf u mean does not contain definition for Load()
 
             RecordGrid.DataContext = dbSet.Local.ToObservableCollection();
             
