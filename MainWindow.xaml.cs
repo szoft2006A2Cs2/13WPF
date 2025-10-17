@@ -60,10 +60,10 @@ namespace AdminWPF
             lbTableSelect.ItemsSource = _dbContextTableProperties;    
             lbTableSelect.DisplayMemberPath = "";
 
-            _dbContext.Books.Load();
+/*            _dbContext.Books.Load();
             _dbContext.Authors.Load();
             RecordGrid.DataContext = _dbContext.Books.Local.ToObservableCollection();
-        }
+*/        }
 
         private void lbTableSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -74,17 +74,12 @@ namespace AdminWPF
 
             dynamic dbSet = selected.PropertyInfo.GetValue(_dbContext);
 
-            var dbSetType = selected.PropertyInfo.PropertyType.GetGenericArguments()[0];
+            if (dbSet == null) throw new Exception();
 
-            Type t = typeof(DbSet<>).MakeGenericType(dbSetType);
+            if (dbSet is not DbSet<object>) throw new Exception();
 
-            var a = dbSet.GetType();
-            //System.Object.ReferenceEquals(this._dbContext.Authors, dbSet) ==> ture ????
-            //dbSet.Load(); //tf u mean does not contain definition for Load()
-
+            EntityFrameworkQueryableExtensions.Load(dbSet);
             RecordGrid.DataContext = dbSet.Local.ToObservableCollection();
-            
-            //RecordGrid.ItemsSource = (()item.GetValue(this._dbContext)).ToList();
         }
 
         private void RecordGrid_SourceUpdated(object sender, DataTransferEventArgs e)
