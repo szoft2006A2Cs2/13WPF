@@ -8,20 +8,19 @@ using System.Threading.Tasks;
 namespace AdminWPF.Models
 {
     [Table("book")]
-    internal class Book : Model
+    public class Book
     {
+        public Book()
+        {
+            this.BookAuthors = new HashSet<BookAuthor>();
+            this.BookGenres = new HashSet<BookGenre>();
+        }
         public int Id { get; set; }
-        public string Title { 
-            get; 
-            set; }
+        public string Title { get; set; }
         public float Rating { get; set; }
         public string Edition { get; set; }
         public string Language { get; set; }
-        public Book() { }
-
-        public override string ToString()
-        {
-            return $"{this.Id}, {this.Title}, {this.Rating}, {this.Edition}, {this.Language}";
-        }
+        public virtual ICollection<BookAuthor> BookAuthors { get; set; }
+        public virtual ICollection<BookGenre> BookGenres { get; set; }
     }
 }

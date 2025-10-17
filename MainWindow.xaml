@@ -19,7 +19,7 @@
 
         <ListBox x:Name="lbTableSelect" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=5}" SelectionChanged="lbTableSelect_SelectionChanged"/>
 
-        <DataGrid x:Name="RecordGrid" Grid.Column="1" SourceUpdated="RecordGrid_SourceUpdated" TargetUpdated="RecordGrid_TargetUpdated" SelectionChanged="RecordGrid_SelectionChanged"
+        <DataGrid x:Name="RecordGrid" Grid.Column="1" AutoGenerateColumns="True" SourceUpdated="RecordGrid_SourceUpdated" TargetUpdated="RecordGrid_TargetUpdated" SelectionChanged="RecordGrid_SelectionChanged"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch" d:ItemsSource="{d:SampleData ItemCount=5}"/>
 
         <Grid Grid.Column="1" Grid.Row="1">
@@ -28,7 +28,7 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Button x:Name="btn_Delete" Margin="10" Grid.Column="0" Click="Button_Click_Delete">Delete</Button>
-            <Button x:Name="btn_Save" Margin="10" Grid.Column="1" Click="Button_Click_Save" IsEnabled="False">Save Changes</Button>
+            <Button x:Name="btn_Save" Margin="10" Grid.Column="1" Click="Button_Click_Save" IsEnabled="True">Save Changes</Button>
         </Grid>
 
     </Grid>

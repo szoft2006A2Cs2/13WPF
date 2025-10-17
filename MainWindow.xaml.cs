@@ -5,6 +5,7 @@ using System.CodeDom;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Windows;
@@ -54,9 +55,10 @@ namespace AdminWPF
         {
             InitializeComponent();
 
-            //never closed (not ideal)
+            //this should not be used like this but we ball
             _dbContext = new BookCatalogContext();
             _dbContext.ChangeTracker.StateChanged += EntityStateChanged;
+
             _dbContextTableProperties = this._dbContext
                 .GetType()
                 .GetProperties()

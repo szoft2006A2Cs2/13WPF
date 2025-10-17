@@ -7,16 +7,15 @@ using System.Threading.Tasks;
 
 namespace AdminWPF.Models
 {
-    [Table("author")]
-    public class Author
+    [Table("genre")]
+    public class Genre
     {
-        public Author()
+        public Genre()
         {
-            this.BookAuthors = new HashSet<BookAuthor>();
+            this.BookGenres = new HashSet<BookGenre>();
         }
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Role { get; set; }
-        public virtual ICollection<BookAuthor> BookAuthors { get; set; }
+        public virtual ICollection<BookGenre> BookGenres { get; set; }
     }
 }
