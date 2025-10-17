@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MySql.EntityFrameworkCore.Extensions;
 using AdminWPF.Models;
+using System.Configuration;
 
 namespace AdminWPF
 {
@@ -21,7 +22,7 @@ namespace AdminWPF
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySQL("server=localhost;port=3306;database=book_catalog;user=root;password=");
+            optionsBuilder.UseMySQL(ConfigurationManager.ConnectionStrings["BookCatalog"].ConnectionString);
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

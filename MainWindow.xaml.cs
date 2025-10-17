@@ -27,7 +27,7 @@ namespace AdminWPF
     {
         //bullshit for databinding 
         [ValueConversion(typeof(int), typeof(bool))]
-        public class BoolConvert : IValueConverter
+        public class IntToBoolConvert : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
@@ -43,6 +43,20 @@ namespace AdminWPF
                 return DependencyProperty.UnsetValue;
             }
         }
+        public class NullToBoolConvert : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return value != null;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                //dont give a flying fuck
+                return DependencyProperty.UnsetValue;
+            }
+        }
+        
         public class PInfoWrapper
         {
             public string Name { get; set; }
@@ -57,7 +71,6 @@ namespace AdminWPF
 
             //this should not be used like this but we ball
             _dbContext = new BookCatalogContext();
-            _dbContext.ChangeTracker.StateChanged += EntityStateChanged;
 
             _dbContextTableProperties = this._dbContext
                 .GetType()
@@ -75,8 +88,6 @@ namespace AdminWPF
                 Mode = BindingMode.TwoWay,
                 Path = new PropertyPath("."),
                 UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                NotifyOnSourceUpdated = true,
-                NotifyOnTargetUpdated = true
             });
 
             //binding the delete button's IsEnabled to true when there is at least one selected item, false otherwise
@@ -85,8 +96,33 @@ namespace AdminWPF
             {
                 Mode = BindingMode.OneWay,
                 Path = new PropertyPath("SelectedItems.Count"),
-                Converter = new BoolConvert(),
+                Converter = new IntToBoolConvert(),
             });
+
+            btn_Save.DataContext = RecordGrid;
+            BindingOperations.SetBinding(btn_Save, Button.IsEnabledProperty, new Binding()
+            {
+                Mode = BindingMode.OneWay,
+                Path = new PropertyPath("DataContext"),
+                Converter = new NullToBoolConvert(),
+            });
+
+
+            if (_dbContext.Database.CanConnect() == false)
+            {
+                MessageBox.Show("Could not connect to database :/");
+                Application.Current.Shutdown();
+            }
+
+            //real nasty stuff 
+            //preloading all tables
+            //pls look away 
+            foreach (var p in _dbContextTableProperties)
+            {
+                dynamic dbSet = p.PropertyInfo.GetValue(_dbContext);
+                if (dbSet == null) throw new Exception();
+                EntityFrameworkQueryableExtensions.Load(dbSet);
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -95,13 +131,9 @@ namespace AdminWPF
             lbTableSelect.DisplayMemberPath = "Name";
         }
 
-        private static void EntityStateChanged(object sender, EntityEntryEventArgs e)
-        {
-            //MessageBox.Show($"Entity state changed from");
-        }
-
         private void lbTableSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            RecordGrid.Visibility = Visibility.Visible;
             ListBox lb = (ListBox)sender;
             if (lb.SelectedItem is not PInfoWrapper) throw new Exception("SelectedItem must be of type PInfoWrapper");
 
@@ -109,22 +141,8 @@ namespace AdminWPF
             dynamic dbSet = selected.PropertyInfo.GetValue(_dbContext);
             if (dbSet == null) throw new Exception();
 
-            //if (dbSet is not DbSet<object>) throw new Exception();
-
             EntityFrameworkQueryableExtensions.Load(dbSet);
             RecordGrid.DataContext = dbSet.Local.ToObservableCollection();
-        }
-
-        private void RecordGrid_SourceUpdated(object sender, DataTransferEventArgs e)
-        {
-        }
-        private void RecordGrid_TargetUpdated(object sender, DataTransferEventArgs e)
-        {
-        }
-
-        private void RecordGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
         }
 
         private void Button_Click_Delete(object sender, RoutedEventArgs e)
@@ -135,13 +153,19 @@ namespace AdminWPF
             {
                 _dbContext.Remove(item);
             }
-            //RecordGrid.Items.Remove(RecordGrid.SelectedItem);
-            //_dbContext.Books.Remove(_dbContext.Books.First());
         }
 
         private void Button_Click_Save(object sender, RoutedEventArgs e)
         {
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.SaveChanges();
+                MessageBox.Show("Saved changes");
+                tbLastSave.Text = "Last save\n" + DateTime.Now.ToString(); //10pm, give me a break
+            }catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Saving", MessageBoxButton.OK ,MessageBoxImage.Error);
+            }
         }
     }
 }
